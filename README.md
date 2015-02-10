@@ -3,108 +3,87 @@ Air-Pollution
 
 Programming Assignment 1 of the R-programming course on Coursera
 
-### Introduction
+# Introduction
 
-This second programming assignment will require you to write an R
-function that is able to cache potentially time-consuming computations.
-For example, taking the mean of a numeric vector is typically a fast
-operation. However, for a very long vector, it may take too long to
-compute the mean, especially if it has to be computed repeatedly (e.g.
-in a loop). If the contents of a vector are not changing, it may make
-sense to cache the value of the mean so that when we need it again, it
-can be looked up in the cache rather than recomputed. In this
-Programming Assignment you will take advantage of the scoping rules of
-the R language and how they can be manipulated to preserve state inside
-of an R object.
+For this first programming assignment you will write three functions that are meant to interact with dataset that accompanies this assignment. The dataset is contained in a zip file specdata.zip that you can download from the Coursera web site.
 
-### Example: Caching the Mean of a Vector
+# Data
 
-In this example we introduce the `<<-` operator which can be used to
-assign a value to an object in an environment that is different from the
-current environment. Below are two functions that are used to create a
-special object that stores a numeric vector and caches its mean.
+The zip file containing the data can be downloaded here:
 
-The first function, `makeVector` creates a special "vector", which is
-really a list containing a function to
+    specdata.zip [2.4MB] 
 
-1.  set the value of the vector
-2.  get the value of the vector
-3.  set the value of the mean
-4.  get the value of the mean
+The zip file contains 332 comma-separated-value (CSV) files containing pollution monitoring data for fine particulate matter (PM) air pollution at 332 locations in the United States. Each file contains data from a single monitor and the ID number for each monitor is contained in the file name. For example, data for monitor 200 is contained in the file "200.csv". Each file contains three variables:
 
-<!-- -->
+* Date: the date of the observation in YYYY-MM-DD format (year-month-day)
+* sulfate: the level of sulfate PM in the air on that date (measured in micrograms per cubic meter)
+* nitrate: the level of nitrate PM in the air on that date (measured in micrograms per cubic meter)
 
-    makeVector <- function(x = numeric()) {
-            m <- NULL
-            set <- function(y) {
-                    x <<- y
-                    m <<- NULL
-            }
-            get <- function() x
-            setmean <- function(mean) m <<- mean
-            getmean <- function() m
-            list(set = set, get = get,
-                 setmean = setmean,
-                 getmean = getmean)
-    }
+For this programming assignment you will need to unzip this file and create the directory 'specdata'. Once you have unzipped the zip file, do not make any modifications to the files in the 'specdata' directory. In each file you'll notice that there are many days where either sulfate or nitrate (or both) are missing (coded as NA). This is common with air pollution monitoring data in the United States.
 
-The following function calculates the mean of the special "vector"
-created with the above function. However, it first checks to see if the
-mean has already been calculated. If so, it `get`s the mean from the
-cache and skips the computation. Otherwise, it calculates the mean of
-the data and sets the value of the mean in the cache via the `setmean`
-function.
+# Part 1
 
-    cachemean <- function(x, ...) {
-            m <- x$getmean()
-            if(!is.null(m)) {
-                    message("getting cached data")
-                    return(m)
-            }
-            data <- x$get()
-            m <- mean(data, ...)
-            x$setmean(m)
-            m
-    }
+Write a function named 'pollutantmean' that calculates the mean of a pollutant (sulfate or nitrate) across a specified list of monitors. The function 'pollutantmean' takes three arguments: 'directory', 'pollutant', and 'id'. Given a vector monitor ID numbers, 'pollutantmean' reads that monitors' particulate matter data from the directory specified in the 'directory' argument and returns the mean of the pollutant across all of the monitors, ignoring any missing values coded as NA. A prototype of the function is as follows
 
-### Assignment: Caching the Inverse of a Matrix
+```
+pollutantmean <- function(directory, pollutant, id = 1:332) {
+        ## 'directory' is a character vector of length 1 indicating
+        ## the location of the CSV files
 
-Matrix inversion is usually a costly computation and there may be some
-benefit to caching the inverse of a matrix rather than computing it
-repeatedly (there are also alternatives to matrix inversion that we will
-not discuss here). Your assignment is to write a pair of functions that
-cache the inverse of a matrix.
+        ## 'pollutant' is a character vector of length 1 indicating
+        ## the name of the pollutant for which we will calculate the
+        ## mean; either "sulfate" or "nitrate".
 
-Write the following functions:
+        ## 'id' is an integer vector indicating the monitor ID numbers
+        ## to be used
 
-1.  `makeCacheMatrix`: This function creates a special "matrix" object
-    that can cache its inverse.
-2.  `cacheSolve`: This function computes the inverse of the special
-    "matrix" returned by `makeCacheMatrix` above. If the inverse has
-    already been calculated (and the matrix has not changed), then
-    `cacheSolve` should retrieve the inverse from the cache.
+        ## Return the mean of the pollutant across all monitors list
+        ## in the 'id' vector (ignoring NA values)
+}
+```
 
-Computing the inverse of a square matrix can be done with the `solve`
-function in R. For example, if `X` is a square invertible matrix, then
-`solve(X)` returns its inverse.
+You can see [some example output](https://d396qusza40orc.cloudfront.net/rprog%2Fdoc%2Fpollutantmean-demo.html) from this function. The function that you write should be able to match this output. Please save your code to a file named pollutantmean.R.
 
-For this assignment, assume that the matrix supplied is always
-invertible.
+# Part 2
 
-In order to complete this assignment, you must do the following:
+Write a function that reads a directory full of files and reports the number of completely observed cases in each data file. The function should return a data frame where the first column is the name of the file and the second column is the number of complete cases. A prototype of this function follows
 
-1.  Fork the GitHub repository containing the stub R files at
-    [https://github.com/rdpeng/ProgrammingAssignment2](https://github.com/rdpeng/ProgrammingAssignment2)
-    to create a copy under your own account.
-2.  Clone your forked GitHub repository to your computer so that you can
-    edit the files locally on your own machine.
-3.  Edit the R file contained in the git repository and place your
-    solution in that file (please do not rename the file).
-4.  Commit your completed R file into YOUR git repository and push your
-    git branch to the GitHub repository under your account.
-5.  Submit to Coursera the URL to your GitHub repository that contains
-    the completed R code for the assignment.
+```
+complete <- function(directory, id = 1:332) {
+        ## 'directory' is a character vector of length 1 indicating
+        ## the location of the CSV files
 
-### Grading
+        ## 'id' is an integer vector indicating the monitor ID numbers
+        ## to be used
+        
+        ## Return a data frame of the form:
+        ## id nobs
+        ## 1  117
+        ## 2  1041
+        ## ...
+        ## where 'id' is the monitor ID number and 'nobs' is the
+        ## number of complete cases
+}
+```
 
-This assignment will be graded via peer assessment.
+You can see [some example output from this function](https://d396qusza40orc.cloudfront.net/rprog%2Fdoc%2Fcomplete-demo.html). The function that you write should be able to match this output. Please save your code to a file named complete.R. To run the submit script for this part, make sure your working directory has the file complete.R in it.
+
+# Part 3
+
+Write a function that takes a directory of data files and a threshold for complete cases and calculates the correlation between sulfate and nitrate for monitor locations where the number of completely observed cases (on all variables) is greater than the threshold. The function should return a vector of correlations for the monitors that meet the threshold requirement. If no monitors meet the threshold requirement, then the function should return a numeric vector of length 0. A prototype of this function follows
+
+```
+corr <- function(directory, threshold = 0) {
+        ## 'directory' is a character vector of length 1 indicating
+        ## the location of the CSV files
+
+        ## 'threshold' is a numeric vector of length 1 indicating the
+        ## number of completely observed observations (on all
+        ## variables) required to compute the correlation between
+        ## nitrate and sulfate; the default is 0
+
+        ## Return a numeric vector of correlations
+}
+```
+
+For this function you will need to use the 'cor' function in R which calculates the correlation between two vectors. Please read the help page for this function via '?cor' and make sure that you know how to use it. You can see [some example output](https://d396qusza40orc.cloudfront.net/rprog%2Fdoc%2Fcorr-demo.html) from this function. The function that you write should be able to match this output. Please save your code to a file named corr.R. To run the submit script for this part, make sure your working directory has the file corr.R in it.
